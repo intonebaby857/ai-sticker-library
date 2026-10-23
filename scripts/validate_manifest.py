@@ -159,6 +159,13 @@ def main() -> int:
     if not isinstance(base_url, str) or "OWNER" in base_url or "REPO" in base_url:
         warnings.append("base_url 仍是占位符，请替换为实际地址")
 
+    image_base_url = manifest.get("image_base_url")
+    if image_base_url is not None:
+        if not isinstance(image_base_url, str) or not image_base_url.strip():
+            errors.append("image_base_url 必须是非空字符串")
+        elif not image_base_url.endswith("/"):
+            warnings.append("image_base_url 建议以 / 结尾，方便和 file 拼接")
+
     for warning in warnings:
         print(f"WARN: {warning}")
     for error in errors:

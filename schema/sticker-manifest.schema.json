@@ -20,6 +20,10 @@
     "base_url": {
       "type": "string"
     },
+    "image_base_url": {
+      "type": "string",
+      "description": "Optional CDN mirror for sticker images, preferred by chat UIs that fail to load raw GitHub URLs."
+    },
     "categories": {
       "type": "array",
       "description": "Known emotions plus any emotion found in filenames.",

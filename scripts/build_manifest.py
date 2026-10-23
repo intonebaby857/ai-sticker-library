@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ STICKER_DIR = ROOT / "stickers"
 MANIFEST = ROOT / "manifest.json"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)+$")
+RAW_URL_RE = re.compile(r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/")
 STOPWORDS = {"a", "an", "the", "and", "of", "to", "in", "on", "at", "with", "under"}
 
 KNOWN_EMOTIONS = [
@@ -55,6 +57,16 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def cdn_image_base(base_url: str) -> str:
+    """Mirror images on jsDelivr so chat UIs can load them reliably."""
+    match = RAW_URL_RE.match(base_url)
+    if not match:
+        return ""
+    owner, repo = match.groups()
+    ref = os.environ.get("GITHUB_SHA", "main")
+    return f"https://gcore.jsdelivr.net/gh/{owner}/{repo}@{ref}/"
 
 
 def describe(image: Path) -> dict:
@@ -120,6 +132,7 @@ def main() -> int:
         stickers.append(item)
 
     categories = sorted(set(KNOWN_EMOTIONS) | {item["emotion"] for item in stickers})
+    base_url = base.get("base_url", "")
     manifest = {
         "name": base.get("name", "AI Sticker Library"),
         "version": int(base.get("version", 1)),
@@ -127,7 +140,8 @@ def main() -> int:
             "description",
             "A public, machine-readable sticker library for AI agents.",
         ),
-        "base_url": base.get("base_url", ""),
+        "base_url": base_url,
+        "image_base_url": cdn_image_base(base_url) or base.get("image_base_url", ""),
         "categories": categories,
         "stickers": stickers,
     }

@@ -8,13 +8,15 @@
 https://raw.githubusercontent.com/intonebaby857/ai-sticker-library/main/manifest.json
 ```
 
-图片地址由 `base_url + file` 拼接，例如：
+图片地址优先用 `image_base_url + file` 拼接；清单里没有 `image_base_url` 时，再用 `base_url + file`。`image_base_url` 是 jsDelivr 镜像，聊天窗口加载图片更稳，例如：
 
 ```text
-https://raw.githubusercontent.com/intonebaby857/ai-sticker-library/main/stickers/love-puppy-holding-big-heart.png
+https://gcore.jsdelivr.net/gh/intonebaby857/ai-sticker-library@<commit>/stickers/love-puppy-holding-big-heart.png
 ```
 
 清单由 GitHub Actions 从文件名自动生成，新增图片后约一分钟生效。
+
+> 如果聊天界面不渲染外部图片、只显示"加载图片"，请在贴图之外再给一个可点击的 Markdown 链接，不要重复尝试同一张图。
 
 ## 选图建议
 
@@ -35,6 +37,9 @@ BASE = "https://raw.githubusercontent.com/intonebaby857/ai-sticker-library/main/
 with urllib.request.urlopen(BASE + "manifest.json", timeout=10) as response:
     manifest = json.load(response)
 
+# 优先用 CDN 镜像，聊天窗口更容易加载
+IMAGE_BASE = manifest.get("image_base_url") or manifest["base_url"]
+
 
 def pick(emotion: str, keywords: tuple[str, ...] = ()) -> str | None:
     for sticker in manifest["stickers"]:
@@ -42,7 +47,7 @@ def pick(emotion: str, keywords: tuple[str, ...] = ()) -> str | None:
             continue
         if keywords and not set(keywords) & set(sticker["tags"]):
             continue
-        return BASE + sticker["file"]
+        return IMAGE_BASE + sticker["file"]
     return None
 
 
