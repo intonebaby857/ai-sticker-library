@@ -21,6 +21,7 @@ STICKER_DIR = ROOT / "stickers"
 MANIFEST = ROOT / "manifest.json"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)+$")
+STOPWORDS = {"a", "an", "the", "and", "of", "to", "in", "on", "at", "with", "under"}
 
 KNOWN_EMOTIONS = [
     "angry",
@@ -66,7 +67,7 @@ def describe(image: Path) -> dict:
 
     parts = stem.split("-")
     emotion = parts[0]
-    tags = list(dict.fromkeys(parts))
+    tags = [part for part in dict.fromkeys(parts) if part not in STOPWORDS]
 
     return {
         "id": stem,

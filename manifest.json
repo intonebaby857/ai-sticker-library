@@ -16,6 +16,70 @@
   ],
   "stickers": [
     {
+      "id": "angry-hamster-puffing-cheeks",
+      "file": "stickers/angry-hamster-puffing-cheeks.png",
+      "emotion": "angry",
+      "tags": [
+        "angry",
+        "hamster",
+        "puffing",
+        "cheeks"
+      ],
+      "description": "hamster puffing cheeks",
+      "usage": "用户生气、吐槽或表达不满时使用；不要用来针对具体的人。",
+      "format": "png",
+      "bytes": 369852,
+      "sha256": "31f1aeb35c8d1564a4ffec2bd849d286c2e56dc90fd45eb733bdaa34a0d29364"
+    },
+    {
+      "id": "celebrate-bear-throwing-confetti",
+      "file": "stickers/celebrate-bear-throwing-confetti.png",
+      "emotion": "celebrate",
+      "tags": [
+        "celebrate",
+        "bear",
+        "throwing",
+        "confetti"
+      ],
+      "description": "bear throwing confetti",
+      "usage": "完成目标、恭喜或庆祝时使用。",
+      "format": "png",
+      "bytes": 363167,
+      "sha256": "c0499db45454be2304e1913071241302454eae963fc17b656936d8c98d35842f"
+    },
+    {
+      "id": "confused-duck-tilting-head",
+      "file": "stickers/confused-duck-tilting-head.png",
+      "emotion": "confused",
+      "tags": [
+        "confused",
+        "duck",
+        "tilting",
+        "head"
+      ],
+      "description": "duck tilting head",
+      "usage": "用户疑惑、没看懂或对话卡住时使用。",
+      "format": "png",
+      "bytes": 309643,
+      "sha256": "3c4b8a27f15542ab35f014b65a355fc4fa3e839f909147543b58bc871c823b23"
+    },
+    {
+      "id": "happy-bunny-jumping-with-confetti",
+      "file": "stickers/happy-bunny-jumping-with-confetti.png",
+      "emotion": "happy",
+      "tags": [
+        "happy",
+        "bunny",
+        "jumping",
+        "confetti"
+      ],
+      "description": "bunny jumping with confetti",
+      "usage": "用户开心、赞同或想庆祝时使用；语气轻松积极。",
+      "format": "png",
+      "bytes": 371638,
+      "sha256": "c92fe0310ae7391f0e3da8da6a883b8e401b28157dcbcda9664bc27bdc316d27"
+    },
+    {
       "id": "love-puppy-holding-big-heart",
       "file": "stickers/love-puppy-holding-big-heart.png",
       "emotion": "love",
@@ -31,6 +95,69 @@
       "format": "png",
       "bytes": 364416,
       "sha256": "58ee736ef9878ab7512933b9be6afbaef1d5313a731d9d1e151588a75c535cbd"
+    },
+    {
+      "id": "others-robot-shrugging",
+      "file": "stickers/others-robot-shrugging.png",
+      "emotion": "others",
+      "tags": [
+        "others",
+        "robot",
+        "shrugging"
+      ],
+      "description": "robot shrugging",
+      "usage": "以上都不太合适、但气氛到位时使用。",
+      "format": "png",
+      "bytes": 283293,
+      "sha256": "17956534402f2822f19382aabd19028c8675cc7b0aecd1585ff22eea8ccf8f8b"
+    },
+    {
+      "id": "sad-cat-crying-under-rain",
+      "file": "stickers/sad-cat-crying-under-rain.png",
+      "emotion": "sad",
+      "tags": [
+        "sad",
+        "cat",
+        "crying",
+        "rain"
+      ],
+      "description": "cat crying under rain",
+      "usage": "用户难过、失落或需要安慰时使用；先共情，再发图。",
+      "format": "png",
+      "bytes": 385756,
+      "sha256": "d3f0832bd9dbe71fe54892038478a95557cdc72ac687d56f7e72435e235ac858"
+    },
+    {
+      "id": "surprised-otter-dropping-popcorn",
+      "file": "stickers/surprised-otter-dropping-popcorn.png",
+      "emotion": "surprised",
+      "tags": [
+        "surprised",
+        "otter",
+        "dropping",
+        "popcorn"
+      ],
+      "description": "otter dropping popcorn",
+      "usage": "遇到意外、惊讶或剧情反转时使用。",
+      "format": "png",
+      "bytes": 390155,
+      "sha256": "afced6fd72d071a8118e50dd7a1519e22ae5d5b11d4b084698e1c8a96a9a8615"
+    },
+    {
+      "id": "tired-sloth-melting-on-desk",
+      "file": "stickers/tired-sloth-melting-on-desk.png",
+      "emotion": "tired",
+      "tags": [
+        "tired",
+        "sloth",
+        "melting",
+        "desk"
+      ],
+      "description": "sloth melting on desk",
+      "usage": "用户累了、想躺平或准备收工时使用。",
+      "format": "png",
+      "bytes": 382703,
+      "sha256": "19c649958c581490c25449442d4b3567918189ad200380418bad42486c75454c"
     }
   ]
 }
