@@ -14,5 +14,23 @@
     "surprised",
     "tired"
   ],
-  "stickers": []
+  "stickers": [
+    {
+      "id": "love-puppy-holding-big-heart",
+      "file": "stickers/love-puppy-holding-big-heart.png",
+      "emotion": "love",
+      "tags": [
+        "love",
+        "puppy",
+        "holding",
+        "big",
+        "heart"
+      ],
+      "description": "puppy holding big heart",
+      "usage": "表达喜欢、爱意、撒娇或感谢时使用。",
+      "format": "png",
+      "bytes": 364416,
+      "sha256": "58ee736ef9878ab7512933b9be6afbaef1d5313a731d9d1e151588a75c535cbd"
+    }
+  ]
 }
