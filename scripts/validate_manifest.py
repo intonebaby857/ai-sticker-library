@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Validate manifest.json against the images in stickers/.
 
+Every field except file facts is derived from the filename, so a mismatch
+almost always means manifest.json is stale. Re-run build_manifest.py.
+
 Usage:
     python3 scripts/validate_manifest.py
 """
@@ -17,8 +20,20 @@ ROOT = Path(__file__).resolve().parent.parent
 STICKER_DIR = ROOT / "stickers"
 MANIFEST = ROOT / "manifest.json"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
-ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)+$")
 HEX_RE = re.compile(r"^[a-f0-9]{64}$")
+
+KNOWN_EMOTIONS = [
+    "angry",
+    "celebrate",
+    "confused",
+    "happy",
+    "love",
+    "others",
+    "sad",
+    "surprised",
+    "tired",
+]
 
 
 def sha256(path: Path) -> str:
@@ -52,16 +67,14 @@ def main() -> int:
         errors.append("stickers 必须是数组")
         stickers = []
 
-    disk_categories = sorted(
-        path.name
-        for path in STICKER_DIR.iterdir()
-        if path.is_dir() and not path.name.startswith(".")
-    )
-    if manifest.get("categories") != disk_categories:
-        errors.append("categories 与 stickers/ 子目录不一致，请重新运行 build_manifest.py")
+    categories = manifest.get("categories")
+    if not isinstance(categories, list) or any(not isinstance(item, str) for item in categories):
+        errors.append("categories 必须是字符串数组")
+        categories = []
 
     listed_files: set[str] = set()
     seen_ids: set[str] = set()
+    used_emotions: set[str] = set()
 
     for index, item in enumerate(stickers):
         label = f"stickers[{index}]"
@@ -70,25 +83,39 @@ def main() -> int:
             continue
 
         sticker_id = item.get("id")
-        if not isinstance(sticker_id, str) or not ID_RE.match(sticker_id):
-            errors.append(f"{label}.id 不合法: {sticker_id!r}")
-        elif sticker_id in seen_ids:
+        if not isinstance(sticker_id, str) or not NAME_RE.fullmatch(sticker_id):
+            errors.append(
+                f"{label}.id 必须是 心情-角色-动作 形式的小写短横线名: {sticker_id!r}"
+            )
+            continue
+        if sticker_id in seen_ids:
             errors.append(f"{label}.id 重复: {sticker_id}")
-        else:
-            seen_ids.add(sticker_id)
+        seen_ids.add(sticker_id)
 
-        for key in ("emotion", "description"):
-            value = item.get(key)
-            if not isinstance(value, str) or not value.strip():
-                errors.append(f"{label}.{key} 必须是非空字符串")
+        emotion = item.get("emotion")
+        if not isinstance(emotion, str) or not emotion.strip():
+            errors.append(f"{label}.emotion 必须是非空字符串")
+        else:
+            used_emotions.add(emotion)
+            if emotion != sticker_id.split("-")[0]:
+                errors.append(
+                    f"{label}.emotion 应等于文件名的第一段 {sticker_id.split('-')[0]!r}: {emotion!r}"
+                )
 
         tags = item.get("tags")
-        if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
-            errors.append(f"{label}.tags 必须是字符串数组")
+        if (
+            not isinstance(tags, list)
+            or not tags
+            or any(not isinstance(tag, str) or not tag for tag in tags)
+        ):
+            errors.append(f"{label}.tags 必须是非空字符串数组")
+        elif len(set(tags)) != len(tags):
+            errors.append(f"{label}.tags 不能重复")
 
-        usage = item.get("usage")
-        if not isinstance(usage, str):
-            errors.append(f"{label}.usage 必须是字符串")
+        if not isinstance(item.get("description"), str) or not item["description"].strip():
+            errors.append(f"{label}.description 必须是非空字符串")
+        if not isinstance(item.get("usage"), str) or not item["usage"].strip():
+            errors.append(f"{label}.usage 必须是非空字符串")
 
         rel = item.get("file")
         if not isinstance(rel, str) or not rel.startswith("stickers/"):
@@ -102,6 +129,8 @@ def main() -> int:
         if not path.is_file():
             errors.append(f"{label}.file 指向的文件不存在: {rel}")
             continue
+        if path.stem != sticker_id:
+            errors.append(f"{label}.file 的文件名应与 id 一致: {rel}")
 
         expected_format = path.suffix.lower().lstrip(".")
         if item.get("format") != expected_format:
@@ -114,6 +143,10 @@ def main() -> int:
         elif digest != sha256(path):
             errors.append(f"{label}.sha256 与文件内容不一致: {rel}")
 
+    expected_categories = sorted(set(KNOWN_EMOTIONS) | used_emotions)
+    if isinstance(categories, list) and sorted(categories) != expected_categories:
+        errors.append("categories 与心情列表不一致，请重新运行 build_manifest.py")
+
     actual_files = {
         path.relative_to(ROOT).as_posix()
         for path in STICKER_DIR.rglob("*")
@@ -124,7 +157,7 @@ def main() -> int:
 
     base_url = manifest.get("base_url", "")
     if not isinstance(base_url, str) or "OWNER" in base_url or "REPO" in base_url:
-        warnings.append("base_url 仍是占位符，建好仓库后请替换为实际地址")
+        warnings.append("base_url 仍是占位符，请替换为实际地址")
 
     for warning in warnings:
         print(f"WARN: {warning}")
@@ -135,7 +168,7 @@ def main() -> int:
         print(f"校验失败: {len(errors)} 个错误")
         return 1
 
-    print(f"校验通过: {len(stickers)} 张表情, {len(disk_categories)} 个分类")
+    print(f"校验通过: {len(stickers)} 张表情, {len(expected_categories)} 个心情")
     return 0
 
 

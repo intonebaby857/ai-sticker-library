@@ -1,0 +1,51 @@
+name: Update manifest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "stickers/**"
+      - "scripts/**"
+      - "manifest.json"
+      - ".github/workflows/manifest.yml"
+  pull_request:
+    paths:
+      - "stickers/**"
+      - "scripts/**"
+      - "manifest.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build manifest from filenames
+        run: python scripts/build_manifest.py
+
+      - name: Validate manifest
+        run: python scripts/validate_manifest.py
+
+      - name: Commit manifest
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- manifest.json; then
+            echo "manifest.json 没有变化"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "Auto-update manifest.json [skip ci]"
+          git push origin HEAD:main

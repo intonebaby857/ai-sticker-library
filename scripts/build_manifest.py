@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Scan stickers/ and write manifest.json for AI consumption.
+"""Build manifest.json from sticker filenames.
+
+The filename is the metadata: emotion-character-action-detail.png
+There are no sidecar files and no manual mapping table.
 
 Usage:
     python3 scripts/build_manifest.py
@@ -17,7 +20,32 @@ ROOT = Path(__file__).resolve().parent.parent
 STICKER_DIR = ROOT / "stickers"
 MANIFEST = ROOT / "manifest.json"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
-ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)+$")
+
+KNOWN_EMOTIONS = [
+    "angry",
+    "celebrate",
+    "confused",
+    "happy",
+    "love",
+    "others",
+    "sad",
+    "surprised",
+    "tired",
+]
+
+USAGE = {
+    "happy": "用户开心、赞同或想庆祝时使用；语气轻松积极。",
+    "sad": "用户难过、失落或需要安慰时使用；先共情，再发图。",
+    "angry": "用户生气、吐槽或表达不满时使用；不要用来针对具体的人。",
+    "surprised": "遇到意外、惊讶或剧情反转时使用。",
+    "confused": "用户疑惑、没看懂或对话卡住时使用。",
+    "love": "表达喜欢、爱意、撒娇或感谢时使用。",
+    "tired": "用户累了、想躺平或准备收工时使用。",
+    "celebrate": "完成目标、恭喜或庆祝时使用。",
+    "others": "以上都不太合适、但气氛到位时使用。",
+}
+DEFAULT_USAGE = "当对话语境和文件名描述一致时使用。"
 
 
 def sha256(path: Path) -> str:
@@ -28,15 +56,29 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_sidecar(image: Path) -> dict:
-    sidecar = image.with_name(image.name + ".json")
-    if not sidecar.exists():
-        return {}
-    with sidecar.open(encoding="utf-8") as handle:
-        data = json.load(handle)
-    if not isinstance(data, dict):
-        raise ValueError(f"sidecar 必须是 JSON 对象: {sidecar.relative_to(ROOT)}")
-    return data
+def describe(image: Path) -> dict:
+    rel = image.relative_to(ROOT).as_posix()
+    stem = image.stem
+    if not NAME_RE.fullmatch(stem):
+        raise ValueError(
+            f"文件名必须是 心情-角色-动作，全小写加短横线，例如 love-puppy-holding-big-heart.png: {rel}"
+        )
+
+    parts = stem.split("-")
+    emotion = parts[0]
+    tags = list(dict.fromkeys(parts))
+
+    return {
+        "id": stem,
+        "file": rel,
+        "emotion": emotion,
+        "tags": tags,
+        "description": " ".join(parts[1:]),
+        "usage": USAGE.get(emotion, DEFAULT_USAGE),
+        "format": image.suffix.lower().lstrip("."),
+        "bytes": image.stat().st_size,
+        "sha256": sha256(image),
+    }
 
 
 def main() -> int:
@@ -45,55 +87,38 @@ def main() -> int:
         with MANIFEST.open(encoding="utf-8") as handle:
             base = json.load(handle)
 
-    categories = sorted(
-        path.name
-        for path in STICKER_DIR.iterdir()
-        if path.is_dir() and not path.name.startswith(".")
+    stickers: list[dict] = []
+    problems: list[str] = []
+    warnings: list[str] = []
+    seen_ids: set[str] = set()
+
+    images = sorted(
+        path
+        for path in STICKER_DIR.rglob("*")
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTS
     )
 
-    stickers = []
-    problems = []
-    seen_ids = set()
-
-    for image in sorted(STICKER_DIR.rglob("*")):
-        if not image.is_file() or image.suffix.lower() not in IMAGE_EXTS:
-            continue
-
-        rel = image.relative_to(ROOT).as_posix()
-        sticker_id = image.stem
-
-        if not ID_RE.match(sticker_id):
-            problems.append(f"文件名不符合 id 规则（小写字母、数字、连字符）: {rel}")
-            continue
-        if sticker_id in seen_ids:
-            problems.append(f"id 重复: {sticker_id} ({rel})")
-            continue
-        seen_ids.add(sticker_id)
-
+    for image in images:
         try:
-            meta = load_sidecar(image)
-        except (OSError, json.JSONDecodeError, ValueError) as exc:
-            problems.append(f"元数据读取失败: {rel} ({exc})")
-            meta = {}
+            item = describe(image)
+        except ValueError as exc:
+            problems.append(str(exc))
+            continue
 
-        description = str(meta.get("description", "")).strip()
-        if not description:
-            problems.append(f"缺少 description: {image.name}.json")
+        if item["id"] in seen_ids:
+            problems.append(f"id 重复: {item['id']} ({item['file']})")
+            continue
 
-        stickers.append(
-            {
-                "id": sticker_id,
-                "file": rel,
-                "emotion": str(meta.get("emotion") or image.parent.name),
-                "tags": meta.get("tags", []),
-                "description": description,
-                "usage": str(meta.get("usage", "")),
-                "format": image.suffix.lower().lstrip("."),
-                "bytes": image.stat().st_size,
-                "sha256": sha256(image),
-            }
-        )
+        if item["emotion"] not in KNOWN_EMOTIONS:
+            warnings.append(
+                f"心情 {item['emotion']!r} 不在建议列表里: {item['file']} "
+                f"（建议用 {', '.join(KNOWN_EMOTIONS)}）"
+            )
 
+        seen_ids.add(item["id"])
+        stickers.append(item)
+
+    categories = sorted(set(KNOWN_EMOTIONS) | {item["emotion"] for item in stickers})
     manifest = {
         "name": base.get("name", "AI Sticker Library"),
         "version": int(base.get("version", 1)),
@@ -111,9 +136,11 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    print(f"manifest.json 已更新: {len(stickers)} 张表情, {len(categories)} 个分类")
+    print(f"manifest.json 已更新: {len(stickers)} 张表情, {len(categories)} 个心情")
+    for warning in warnings:
+        print(f"WARN: {warning}")
     for problem in problems:
-        print(f"WARN: {problem}")
+        print(f"ERROR: {problem}")
     return 1 if problems else 0
 
 
