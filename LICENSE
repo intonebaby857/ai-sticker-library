@@ -1,0 +1,12 @@
+# License
+
+Unless otherwise stated in a sticker's sidecar metadata:
+
+- Sticker images and metadata in this repository are dedicated to the public
+  domain under CC0 1.0 Universal.
+  https://creativecommons.org/publicdomain/zero/1.0/
+- Code in `scripts/` and `.github/` is licensed under the MIT License.
+  See LICENSE-MIT.
+
+When adding third-party images, keep their original license and record it in
+the sidecar metadata.

@@ -1,0 +1,18 @@
+{
+  "name": "AI Sticker Library",
+  "version": 1,
+  "description": "A public, machine-readable sticker library for AI agents. Each sticker carries an emotion, tags, a description, and usage guidance.",
+  "base_url": "https://raw.githubusercontent.com/intonebaby857/ai-sticker-library/main/",
+  "categories": [
+    "angry",
+    "celebrate",
+    "confused",
+    "happy",
+    "love",
+    "others",
+    "sad",
+    "surprised",
+    "tired"
+  ],
+  "stickers": []
+}
