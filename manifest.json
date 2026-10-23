@@ -3,7 +3,7 @@
   "version": 1,
   "description": "A public, machine-readable sticker library for AI agents. Each sticker carries an emotion, tags, a description, and usage guidance.",
   "base_url": "https://raw.githubusercontent.com/intonebaby857/ai-sticker-library/main/",
-  "image_base_url": "https://gcore.jsdelivr.net/gh/intonebaby857/ai-sticker-library@main/",
+  "image_base_url": "https://gcore.jsdelivr.net/gh/intonebaby857/ai-sticker-library@112fad5c862458d40197f7b00434b1f950f4ec81/",
   "categories": [
     "angry",
     "celebrate",
